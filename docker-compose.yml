@@ -1,0 +1,28 @@
+services:
+    postgres:
+        image: usermanagementservice7294.azurecr.io/samples/postgres
+        environment:
+          - POSTGRES_USER=user
+          - POSTGRES_PASSWORD=12345678
+          - POSTGRES_DB=notes
+        restart: always
+        healthcheck:
+          test: [ "CMD-SHELL", "pg_isready -U user -d notes" ]
+          interval: 5s
+          timeout: 5s
+          retries: 5
+    usermanagementservice.server:
+        image: usermanagementservice7294.azurecr.io/usermanagementserviceserver:latest
+        build:
+          context: .
+          dockerfile: UserManagementService.Server/Dockerfile
+        environment:
+          ConnectionStrings__DbConnection: "Host=postgres;Database=notes;Username=user;Password=12345678;"
+          ASPNETCORE_HTTP_PORTS: "8080"
+        restart: always
+        ports:
+            - 80:8080
+        depends_on:
+          postgres:
+            condition: service_healthy
+  
